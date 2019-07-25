@@ -1,34 +1,43 @@
-import 'package:http/http.dart' show Client, Response;
+import 'package:dio/dio.dart';
 import 'dart:convert';
+import 'dart:async';
 
 class ApiService
 {
-  Client client;
   final String endPoint = "http://www.facexapi.com/get_image_attr?face_det=1";
-
-  ApiService()
-  {
-    client = Client();
-  }
 
   Future<List<HasilDeteksiMuka>> deteksiMuka(List<int> bytesGambar) async
   {
-    Response response = await client.post(
-      endPoint,
-      headers: <String, String> {
-        'user_id': '16fe89b6a44630aa83fc',
-        'user_key': 'b05cef2e0968464f56e2'
-      },
-      body: <String, dynamic> {
-        'image_attr': base64Encode(bytesGambar)
-      }
-    );
+    try
+    {
+      Dio dio = Dio(
+        BaseOptions(
+          baseUrl: endPoint,
+          connectTimeout: 5000,
+          receiveTimeout: 3000
+        )
+      );
+      
+      Response response = await dio.post("", 
+        data: FormData.from({
+          'image_attr': base64Encode(bytesGambar)
+        }),
+        options: Options(
+          headers: <String, dynamic> {
+            'user_id': '16fe89b6a44630aa83fc',
+            'user_key': 'b05cef2e0968464f56e2'
+          }
+        )
+      );
 
-    print(response.body);
-    print('Muka');
-    List<HasilDeteksiMuka> sampel = HasilDeteksiMuka.dariJson(response.body);
-    print('Umur: ');
-    return HasilDeteksiMuka.dariJson(response.body);
+      print('output data: ' + response.data.toString());
+
+      return HasilDeteksiMuka.dariJson(response.data);
+
+    } on DioError catch(e) {
+      print('Tipe error ${e.type.toString()}');
+      throw e;
+    }
   }
 }
 
@@ -54,10 +63,9 @@ class HasilDeteksiMuka
     this.peluangGender = peluangGender;
   }
 
-  static List<HasilDeteksiMuka> dariJson(String responseBody)
+  static List<HasilDeteksiMuka> dariJson(dynamic responseJson)
   {
     List<HasilDeteksiMuka> daftarHasilDeteksiMuka = List<HasilDeteksiMuka>();
-    dynamic responseJson = json.decode(responseBody);
     responseJson.forEach((String key, dynamic value){
       if(key.indexOf('face_id') > -1)
         daftarHasilDeteksiMuka.add(HasilDeteksiMuka(value['age'], value['gender'], double.parse(value['gender_confidence'])));

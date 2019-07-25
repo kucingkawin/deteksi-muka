@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
 
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:face_recognition/api_service.dart';
 
@@ -51,7 +50,20 @@ class _DeteksiGambarState extends State<DeteksiGambar> {
       builder: (BuildContext context, AsyncSnapshot<List<HasilDeteksiMuka>> snapshot) {
         print(snapshot.connectionState);
         print("Data ada: ${snapshot.hasData} (Error: ${snapshot.hasError})");
+
         if(snapshot.connectionState == ConnectionState.done){
+
+          //Cek apakah ada error.
+          if(snapshot.hasError)
+          {
+            return Column(
+              children: <Widget>[
+                Text('Ada masalah. Tekan tombol dibawah ini untuk lakukan proses.'),
+                SizedBox(height: 10.0)
+              ],
+              crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          }
 
           //Dapatkan data terlebih dahulu
           List<HasilDeteksiMuka> hasilDeteksiMuka = snapshot.data;
@@ -63,13 +75,15 @@ class _DeteksiGambarState extends State<DeteksiGambar> {
               builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
                 if(snapshot.connectionState == ConnectionState.done){
                   if(!snapshot.hasError) {
-                    return Column(
-                      children: <Widget>[
-                        Image.memory(snapshot.data, fit: BoxFit.fitWidth),
-                        SizedBox(height: 10.0),
-                      ],
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                    );
+                    if(snapshot.hasData) {
+                      return Column(
+                        children: <Widget>[
+                          Image.memory(snapshot.data, fit: BoxFit.fitWidth),
+                          SizedBox(height: 10.0),
+                        ],
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      );
+                    }
                   }
                 }
                 else if(snapshot.connectionState == ConnectionState.waiting)
