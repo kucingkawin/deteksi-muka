@@ -4,6 +4,7 @@ import 'dart:async';
 
 class ApiService
 {
+  // Test
   final String endPoint = "http://www.facexapi.com/get_image_attr?face_det=1";
 
   Future<List<HasilDeteksiMuka>> deteksiMuka(List<int> bytesGambar) async
